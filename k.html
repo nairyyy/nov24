@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animations Gallery</title>
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    background: black;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 1920px;
+    margin: auto;
+  }
+
+  .box {
+    background: #111;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #000;
+    border-radius: 10px;
+    object-fit: contain;
+  }
+
+  @media (max-width: 900px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .gallery { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="gallery" id="gallery"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // 🔹 Initialize Firebase
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const gallery = document.getElementById('gallery');
+
+  // 🔹 Listen for all animations in real-time
+  db.ref('animations').on('value', snapshot => {
+    gallery.innerHTML = ''; // clear existing
+    const data = snapshot.val();
+    if (!data) {
+      gallery.innerHTML = "<h1 style='color:white;text-align:center;'>No animations yet</h1>";
+      return;
+    }
+
+    Object.values(data).forEach(frames => {
+      if (!frames.length) return;
+
+      const box = document.createElement('div');
+      box.className = 'box';
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 720;
+      canvas.height = 1280;
+      box.appendChild(canvas);
+      gallery.appendChild(box);
+
+      const imgs = frames.map(src => { const img = new Image(); img.src = src; return img; });
+      let i = 0;
+
+      function drawFrame() {
+        const img = imgs[i];
+        if (img.complete) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        i = (i + 1) % imgs.length;
+      }
+
+      setInterval(drawFrame, 120);
+    });
+  });
