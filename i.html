@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stop-Motion Animation Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    h1 {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 4vw;
+      color: white;
+      text-align: center;
+      z-index: 2;
+    }
+    #frame-container {
+      position: absolute;
+      bottom: 20%;
+      left: 0;
+      width: 100%;
+      display: flex;
+      overflow-x: auto;
+      padding: 10px;
+      z-index: 2;
+      background: transparent;
+      scrollbar-width: none;
+    }
+    .frame {
+      width: 15vw;
+      height: 10vw;
+      margin: 0 5px;
+      border: 2px solid #fff;
+      border-radius: 5px;
+    }
+
+    /* Control Bar */
+    .control-bar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: rgb(85, 78, 78);
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+    }
+
+    /* Buttons */
+    button {
+      padding: 10px;
+      font-size: 4vw;
+      border: none;
+      border-radius: 5px;
+      background-color: black;
+      color: white;
+      cursor: pointer;
+      width: 25%;
+      max-width: 150px;
+    }
+    #capture {
+      flex: 1;
+      font-size: 5vw;
+      max-width: 200px;
+    }
+    button:hover {
+      background-color: #444;
+    }
+
+    /* Mobile Adjustments */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 6vw;
+      }
+      .frame {
+        width: 18vw;
+        height: 12vw;
+      }
+      .control-bar {
+        padding: 8px;
+      }
+      button {
+        font-size: 4.5vw;
+        width: 28%;
+      }
+      #capture {
+        font-size: 5.5vw;
+        width: 40%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Move your object slowly and take pictures</h1>
+  <video id="video" autoplay playsinline muted></video>
+  <div id="frame-container"></div>
+  
+  <div class="control-bar">
+    <a href="m.html"><button id="button1">?</button></a>
+    <button id="capture">Capture</button>
+    <button id="play">Play</button>
+  </div>
+
+  <canvas id="canvas" style="display: none;"></canvas>
+  
+  <script>
+    const video = document.getElementById('video');
+    const frameContainer = document.getElementById('frame-container');
+    const captureBtn = document.getElementById('capture');
+    const playBtn = document.getElementById('play');
+    const canvas = document.getElementById('canvas');
+    const frames = [];
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error('Error accessing camera:', err);
+        alert('Error accessing the camera. Please grant permissions.');
+      });
+
+    captureBtn.addEventListener('click', () => {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const frameData = canvas.toDataURL('image/jpeg', 0.5);
+      frames.push(frameData);
+
+      const img = document.createElement('img');
+      img.src = frameData;
+      img.className = 'frame';
+      frameContainer.appendChild(img);
+      console.log("Frame captured:", frameData);
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (frames.length === 0) {
+        alert('No frames captured!');
+        return;
+      }
+
+      try {
+        localStorage.setItem('stopMotionFrames', JSON.stringify(frames));
+        console.log("Frames saved to localStorage:", frames);
+
+        if (localStorage.getItem('stopMotionFrames') === null) {
+          alert('Error: Frames were not saved. Please try again.');
+          return;
+        }
+
+        window.location.href = 'j.html?nocache=' + new Date().getTime();
+      } catch (error) {
+        console.error('Error storing frames:', error);
+        alert('An error occurred while saving animation. Try again.');
+      }
+    });
+  </script>
+</body>
+</html>

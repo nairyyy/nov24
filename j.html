@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stop-Motion Animation Playback</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Controls container (Next Button) */
+    .controls {
+      position: absolute;
+      top: 3vh;
+      right: 3vw;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* General Button Styling */
+    button {
+      padding: 1.5vh 3vw;
+      font-size: clamp(14px, 2vw, 20px); /* Responsive font size */
+      background-color: #292424;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      min-width: 120px;
+      max-width: 200px; /* Prevents oversized buttons */
+    }
+
+    button:hover {
+      background-color: #524a48;
+    }
+
+    /* Back Button Styling (Bottom Left) */
+    .back-button {
+      position: absolute;
+      bottom: 3vh;
+      left: 3vw;
+      font-size: clamp(14px, 2vw, 20px);
+      padding: 1.5vh 3vw;
+      border: 1px solid black;
+      background-color: #f0f0f0;
+      color: rgb(24, 22, 22);
+      cursor: pointer;
+      border-radius: 8px;
+      min-width: 120px;
+      max-width: 200px;
+    }
+
+    .back-button:hover {
+      background-color: #87888a;
+    }
+
+    /* Mobile Adjustments */
+    @media (max-width: 600px) {
+      .controls {
+        top: 2vh;
+        right: 2vw;
+      }
+
+      .back-button {
+        bottom: 2vh;
+        left: 2vw;
+      }
+
+      button, .back-button {
+        font-size: clamp(12px, 4vw, 18px);
+        padding: 2vh 4vw;
+        min-width: 100px;
+        max-width: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="animationCanvas"></canvas>
+
+  <!-- Controls Section (Next Button) -->
+  <div class="controls">
+    <button id="nextBtn">Share my animation</button>
+  </div>
+
+  <!-- Back Button -->
+ 
+<button class="back-button" onclick="window.location.href='i.html';">Try again</button>
+
+
+  <script>
+    const canvas = document.getElementById('animationCanvas');
+    const context = canvas.getContext('2d');
+    const nextBtn = document.getElementById('nextBtn');
+
+    // Retrieve frames from localStorage
+    const frames = JSON.parse(localStorage.getItem('stopMotionFrames')) || [];
+
+    if (frames.length === 0) {
+      alert('No frames to play!');
+      window.location.href = 'i.html';  // Redirect if no frames
+    }
+
+    // Set canvas size to fit screen
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let index = 0;
+    const speed = 100; // Frame delay in milliseconds
+
+    // Play animation
+    function playAnimation() {
+      if (frames.length === 0) return;
+      const img = new Image();
+      img.src = frames[index];
+      img.onload = () => {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      index = (index + 1) % frames.length; // Loop frames
+    }
+
+    setInterval(playAnimation, speed);
+
+    // Handle "Next" button click to navigate to gallery page
+    nextBtn.addEventListener('click', () => {
+      let animations = JSON.parse(localStorage.getItem('animations')) || [];
+      animations.push(frames);
+      localStorage.setItem('animations', JSON.stringify(animations));
+      window.location.href = 'k.html';
+    });
+  </script>
+</body>
+</html>
