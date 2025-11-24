@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Animations Gallery</title>
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    background: black;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 1920px;
+  }
+
+  .box {
+    background: #111;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: #000;
+    border-radius: 10px;
+    object-fit: contain;
+  }
+
+  @media (max-width: 900px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .gallery { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="gallery" id="gallery"></div>
+
+<script>
+const gallery = document.getElementById("gallery");
+let lastAnimationsJSON = null;
+
+// Function to render animations
+function renderAnimations() {
+  const animations = JSON.parse(localStorage.getItem("animations")) || [];
+  
+  // Only update if animations have changed
+  const currentJSON = JSON.stringify(animations);
+  if(currentJSON === lastAnimationsJSON) return;
+  lastAnimationsJSON = currentJSON;
+
+  // Clear gallery
+  gallery.innerHTML = "";
+
+  if (!animations.length) {
+    document.body.innerHTML = "<h1 style='color:white;text-align:center;'>No animations saved</h1>";
+    return;
+  }
+
+  animations.forEach(frames => {
+    if (!frames.length) return;
+
+    const box = document.createElement("div");
+    box.className = "box";
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 720;
+    canvas.height = 1280;
+
+    box.appendChild(canvas);
+    gallery.appendChild(box);
+
+    const imgs = frames.map(src => { const img = new Image(); img.src = src; return img; });
+    let i = 0;
+
+    function drawFrame() {
+      const img = imgs[i];
+      if (img.complete) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
+      i = (i + 1) % imgs.length;
+    }
+
+    setInterval(drawFrame, 120);
+  });
+}
+
+// Auto-refresh check every second
+setInterval(renderAnimations, 1000);
+
+// Optional: auto-scroll up and down smoothly
+let direction = 1;
+const scrollStep = 1;
+const intervalTime = 20;
+function autoScroll() {
+  const maxScroll = document.body.scrollHeight - window.innerHeight;
+  let scrollTop = window.scrollY || window.pageYOffset;
+
+  scrollTop += scrollStep * direction;
+
+  if (scrollTop >= maxScroll) direction = -1;
+  if (scrollTop <= 0) direction = 1;
+
+  window.scrollTo(0, scrollTop);
+}
+setInterval(autoScroll, intervalTime);
+</script>
+
+</body>
+</html>
