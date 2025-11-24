@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stop-Motion Playback</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .controls {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 2;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 1.2em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    color: #181616;
+  }
+  button:hover { background-color: #87888a; color: #fff; }
+</style>
+</head>
+<body>
+<canvas id="animationCanvas"></canvas>
+
+<div class="controls">
+  <button id="backBtn">Try Again</button>
+  <button id="shareBtn">Share My Animation</button>
+</div>
+
+<script>
+const canvas = document.getElementById('animationCanvas');
+const ctx = canvas.getContext('2d');
+const backBtn = document.getElementById('backBtn');
+const shareBtn = document.getElementById('shareBtn');
+
+// Get frames from i.html
+const frames = JSON.parse(localStorage.getItem('stopMotionFrames')) || [];
+if (!frames.length) {
+  alert('No frames found!');
+  window.location.href = 'index.html';
+}
+
+// Canvas setup
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Play animation
+let index = 0;
+const speed = 100;
+function playAnimation() {
+  const img = new Image();
+  img.src = frames[index];
+  img.onload = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  index = (index + 1) % frames.length;
+}
+setInterval(playAnimation, speed);
+
+// Back button goes to i.html
+backBtn.addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
+
+// Share button saves animation to k (animations array) and redirects to n.html
+shareBtn.addEventListener('click', () => {
+  let animations = JSON.parse(localStorage.getItem('animations')) || [];
+  animations.push(frames);           // save new animation
+  localStorage.setItem('animations', JSON.stringify(animations));
+  localStorage.removeItem('stopMotionFrames'); // clear for next session
+
+  window.location.href = 'n.html';   // redirect user to n.html
+});
+</script>
+</body>
+</html>
