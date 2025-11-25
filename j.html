@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stop-Motion Playback</title>
+<style>
+  body { margin:0; background:#000; color:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; }
+  canvas { width:100%; height:100%; object-fit:cover; }
+  .controls { position:absolute; bottom:5%; display:flex; gap:20px; }
+  button { padding:10px 20px; font-size:1.2em; border:none; border-radius:8px; cursor:pointer; background:#f0f0f0; color:#181616; }
+  button:hover { background:#87888a; color:#fff; }
+</style>
+</head>
+<body>
+
+<canvas id="animationCanvas"></canvas>
+<div class="controls">
+  <button id="backBtn">Try Again</button>
+  <button id="shareBtn">Share your animation!</button>
+</div>
+
+<script>
+const canvas = document.getElementById('animationCanvas');
+const ctx = canvas.getContext('2d');
+const backBtn = document.getElementById('backBtn');
+const shareBtn = document.getElementById('shareBtn');
+
+// Get frames
+let frames = JSON.parse(localStorage.getItem('stopMotionFrames')) || [];
+
+// If no frames, redirect silently
+if(!frames.length){
+  window.location.href = 'index.html';
+}
+
+// Resize canvas
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Play animation
+let index = 0;
+const speed = 100;
+function playAnimation(){
+  const img = new Image();
+  img.src = frames[index];
+  img.onload = ()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  };
+  index = (index + 1) % frames.length;
+}
+setInterval(playAnimation, speed);
+
+// Back button
+backBtn.addEventListener('click', ()=>window.location.href='index.html');
+
+// Share button → save animation and go to k.html
+shareBtn.addEventListener('click', ()=>{
+  if(!frames.length) return;
+
+  // Save user animation to "animations" array for gallery
+  let allUserAnimations = JSON.parse(localStorage.getItem('animations')) || [];
+  allUserAnimations.push(frames);
+  localStorage.setItem('animations', JSON.stringify(allUserAnimations));
+
+  // Clear temporary stopMotionFrames
+  localStorage.removeItem('stopMotionFrames');
+
+  // Redirect to gallery
+  window.location.href = 'k.html';
+});
+</script>
+</body>
+</html>

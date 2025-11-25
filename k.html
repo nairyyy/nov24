@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animations Gallery</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    background: black;
+    font-family: Arial, sans-serif;
+    color: white;
+  }
+
+  /* ALWAYS 3 animations per row */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .box {
+    background: #111;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* videos and user animation canvas same size */
+  video, canvas {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 9 / 16;  /* vertical aspect */
+    background: #000;
+    border-radius: 10px;
+    object-fit: cover;
+  }
+</style>
+</head>
+
+<body>
+<div class="gallery" id="gallery"></div>
+
+<script>
+/* ------------------------
+   1) FIXED ANIMATIONS (MP4)
+------------------------- */
+const fixedVideos = [
+  "anim3.mp4",
+  "anim4.mp4",
+  "anim5.mp4",
+  "anim7.mp4",
+  "anim9.mp4", // this will be replaced by user animation
+  "anim14.mp4",
+  "anim17.mp4",
+  "anim20.mp4",
+  "anim24.mp4",
+  "anim13.mp4",
+  "anim15.mp4",
+  "anim19.mp4",
+];
+
+/* ------------------------
+   2) USER ANIMATION (JPG FRAMES)
+------------------------- */
+let saved = JSON.parse(localStorage.getItem("animations")) || [];
+let userFrames = saved.length ? saved[saved.length - 1] : null;
+
+/* ------------------------
+   3) DISPLAY ORDER (user = slot 5)
+------------------------- */
+let displayList = [];
+
+// first 4 fixed videos
+displayList.push(...fixedVideos.slice(0, 4));
+
+// slot 5 → user animation
+displayList.push(userFrames ? { type:"USER_FRAMES", frames:userFrames } : fixedVideos[4]);
+
+// remaining fixed videos
+displayList.push(...fixedVideos.slice(5));
+
+/* ------------------------
+   4) USER JPG FRAME PLAYER
+------------------------- */
+function createFrameAnimation(frames){
+  const gallery = document.getElementById("gallery");
+  const box = document.createElement("div");
+  box.className = "box";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 900;   
+  canvas.height = 1600;
+
+  box.appendChild(canvas);
+  gallery.appendChild(box);
+
+  const ctx = canvas.getContext("2d");
+
+  const imgs = frames.map(src=>{
+    const img = new Image();
+    img.src = src;
+    return img;
+  });
+
+  let index=0;
+  function draw(){
+    const img = imgs[index];
+    if(img.complete){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    }
+    index = (index+1)%imgs.length;
+  }
+
+  setInterval(draw,120);
+}
+
+/* ------------------------
+   5) MP4 VIDEO PLAYER
+------------------------- */
+function createVideoPlayer(src){
+  const gallery = document.getElementById("gallery");
+  const box = document.createElement("div");
+  box.className = "box";
+
+  const video = document.createElement("video");
+  video.src = src;
+  video.autoplay = true;
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+
+  box.appendChild(video);
+  gallery.appendChild(box);
+}
+
+/* ------------------------
+   6) RENDER ALL ANIMATIONS
+------------------------- */
+displayList.forEach(item=>{
+  if(!item) return;
+
+  if(typeof item==="string"){
+    createVideoPlayer(item);
+  } else if(item.type==="USER_FRAMES"){
+    createFrameAnimation(item.frames);
+  }
+});
+
+/* ------------------------
+   7) AUTO SCROLL
+------------------------- */
+let direction = 1;
+const scrollStep = 1;
+
+function autoScroll(){
+  const maxScroll = document.body.scrollHeight - window.innerHeight;
+  let y = window.scrollY;
+  y += scrollStep*direction;
+  if(y >= maxScroll) direction = -1;
+  if(y <= 0) direction = 1;
+  window.scrollTo(0,y);
+}
+
+setInterval(autoScroll,20);
+</script>
+</body>
+</html>
